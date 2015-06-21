@@ -2,12 +2,14 @@
 #include<iostream>
 #include<vector>
 #include<queue>
+#include<stack>
 
 struct Node {
 	int 	value;
 	bool	visited;
+	bool 	pending;
 	std::vector<int> edges;
-	Node (int _value) : visited(false) {
+	Node (int _value) : visited(false), pending(false) {
 		value = _value;
 	}
 };
@@ -20,7 +22,9 @@ public:
 	void add_vertex (int value);
 	void add_edge (int index_a, int index_b);
 	void print_graph ();
-	void transverse_graph_from (int i);
+	void breadth_first_transversal_from (int i);
+	void depth_first_transversal_from (int i);
+	void graph_reset ();
 };
 
 Graph::Graph (int value) : size(1) {
@@ -49,23 +53,54 @@ void Graph::print_graph () {
 	}
 }
 
-void Graph::transverse_graph_from (int i) {
+void Graph::breadth_first_transversal_from (int i) {
 	std::queue<Node*> q;
 	Node* current;
 	Node* temp;
-	q.push (this->v.at (i));	// start transversal from index i
+	this->v.at (i)->pending = true;
+	q.push (this->v.at (i));					// start transversal from index i
 	while (!(q.empty ())) {	
-		current = q.front ();	// pop the first node from the queue
+		current = q.front ();					// pop the first node from the queue
 		q.pop ();
-		if (!(current->visited == true)) {
-			current->visited = true;			// set the current node as visited
-			for (int j = 0; j < current->edges.size (); ++j) {
-				temp = this->v.at (current->edges.at (j) - 1);	// get the adjacent node
-				if (!(temp->visited)) 
-					q.push (temp);				// push the node to the back of queue if it is not visited
+		current->visited = true;				// set the current node as visited
+		for (int j = 0; j < current->edges.size (); ++j) {
+			temp = this->v.at (current->edges.at (j) - 1);	// get the adjacent node
+			if (!(temp->visited) && !(temp->pending)) {
+				q.push (temp);				// push the node to the back of queue if it is not visited and not discovered
+				temp->pending = true;
 			}
-			std::cout << "Visited vertex at " << current->value << std::endl;
 		}
+		std::cout << "Visited vertex at " << current->value << std::endl;
+	}
+	graph_reset ();
+}
+
+void Graph::depth_first_transversal_from (int i) {
+	std::stack<Node*> s;
+	Node* current;
+	Node* temp;
+	this->v.at (i)->pending = true;
+	s.push (this->v.at (i));
+	while (!(s.empty())) {
+		current = s.top ();
+		s.pop ();
+		current->visited = true;
+		for (int j = current->edges.size () - 1; j >= 0; --j) {
+			temp = this->v.at (current->edges.at (j) - 1);
+			if (!(temp->visited) && !(temp->pending)) {
+				s.push(temp);
+				temp->pending = true;
+			}
+		}
+		std::cout << "Visited vertext at " << current->value << std::endl;
+	}	
+	graph_reset();
+}
+
+void Graph::graph_reset () {
+	for (int i = 0; i < this->v.size(); ++i) {
+		this->v.at (i)->visited = false;
+		this->v.at (i)->pending = false;
 	}
 }
 
@@ -102,5 +137,45 @@ int main () {
 	g->add_edge (5, 4);
 	
 	g->print_graph ();
-	g->transverse_graph_from (0);
+	
+	std::cout << "breadth first transversal: " << std::endl;
+	g->breadth_first_transversal_from (0);
+
+	delete g;
+
+	g = new Graph (1);
+
+	g->add_vertex(2);
+	g->add_vertex(3);
+	g->add_vertex(4);
+	g->add_vertex(5);
+	g->add_vertex(6);
+	g->add_vertex(7);
+
+	g->add_edge (0, 1);
+	g->add_edge (0, 2);
+	g->add_edge (0, 3);
+
+	g->add_edge (1, 0);
+	g->add_edge (1, 4);
+	
+	g->add_edge (2, 0);
+	g->add_edge (2, 4);
+
+	g->add_edge (3, 0);
+	g->add_edge (3, 5);
+
+	g->add_edge (4, 1);
+	g->add_edge (4, 2);
+	g->add_edge (4, 6);
+
+	g->add_edge (5, 3);
+	g->add_edge (5, 6);
+
+	g->add_edge (6, 4);
+	g->add_edge (6, 5);
+
+	std::cout << "depth first transversal: " << std::endl;
+	g->depth_first_transversal_from (0);
+
 }
